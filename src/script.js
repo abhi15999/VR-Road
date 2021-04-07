@@ -1,163 +1,207 @@
 import './style.css'
 import * as THREE from 'three'
-import * as SimplexNoise from 'simplex-noise'
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
+import { OrbitControls } from '../helperScripts/OrbitControls';
+import {SkyGeometry,TreesGeometry} from "../helperScripts/RollerCoaster"
 
+//Globals
+let parent,tubeGeometry, mesh,container
+let camera,scene,renderer,splineCamera,cameraEye,cameraHelper
 
-//Textures
-const loader = new THREE.TextureLoader()
-const height = loader.load('height.png')
-const texture = loader.load('/r.jpg')
-const alpha = loader.load('/alpha.png')
+const direction = new THREE.Vector3();
+const binormal = new THREE.Vector3();
+const normal = new THREE.Vector3();
+const position = new THREE.Vector3();
+const lookAt = new THREE.Vector3();
 
-
-let xZoom = 2
-let yZoom = 200
-let noiseStrength = 1.5
-let simplex = new SimplexNoise();
-
-// Debug
-const gui = new dat.GUI()
-
-// Canvas
-const canvas = document.querySelector('canvas.webgl')
-
-// Scene
-const scene = new THREE.Scene()
-
-// Objects
-const geometry = new THREE.PlaneGeometry(innerWidth,2,120,120);
-
-// Materials
-const material = new THREE.MeshStandardMaterial({
-    color:'gray',
-    map:texture
-})
-
-const plane = new THREE.Mesh(geometry,material)
-plane.castShadow = true;
-plane.receiveShadow = true;
-plane.rotation.x = 168.5
-plane.rotation.z = 435
-
-
-
-scene.add(plane)
-
-// gui.add(plane.rotation, 'x').min(0).max(600)
-// gui.add(plane.rotation, 'y').min(0).max(600)
-gui.add(plane.rotation, 'z').min(0).max(600)
-
-
-
-// Mesh
-
-
-// Lights
-
-const pointLight = new THREE.PointLight(0xffffff, 2)
-pointLight.position.x = 2
-pointLight.position.y = 3
-pointLight.position.z = 4
-scene.add(pointLight)
-
-
-
-/**
- * Sizes
- */
 const sizes = {
     width: window.innerWidth,
     height: window.innerHeight
 }
 
-window.addEventListener('resize', () =>
-{
-    // Update sizes
-    sizes.width = window.innerWidth
-    sizes.height = window.innerHeight
+//Spline
+const sampleClosedSpline = new THREE.CatmullRomCurve3( [
+    new THREE.Vector3( 0, - 40, - 40 ),
+    new THREE.Vector3( 0, 30, - 40 ),
+    new THREE.Vector3( 0, 140, - 40 ),
+    new THREE.Vector3( 0, 40, 40 ),
+    new THREE.Vector3( 0, - 40, 40 )
+] );
 
-    // Update camera
-    camera.aspect = sizes.width / sizes.height
-    camera.updateProjectionMatrix()
+sampleClosedSpline.curveType = 'catmullrom';
+sampleClosedSpline.closed = true;
+const spline = sampleClosedSpline;
 
-    // Update renderer
-    renderer.setSize(sizes.width, sizes.height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+//Textures
+const loader = new THREE.TextureLoader()
+const texture = loader.load('/r.jpg')
+
+
+
+
+
+// Debug
+let gui = new dat.GUI()
+
+let material = new THREE.MeshLambertMaterial({
+    color:  'gray',map:texture
 })
+let wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, opacity: 0.3, wireframe: true, transparent: true } );
 
-/**
- * Camera
- */
-// Base camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.x = 0
-camera.position.y = 2
-camera.position.z = 3
-gui.add(camera.position,'x')
-gui.add(camera.position,'y')
-gui.add(camera.position,'z')
 
-scene.add(camera)
+//ADD TUBE FUNCTION
+function addTube () {
+    if(mesh !== undefined){
+        parent.remove(mesh)
+        mesh.geometry.dispose()
+    }
 
-// Controls
-// const controls = new OrbitControls(camera, canvas)
-// controls.enableDamping = true
+    const extrudePath = spline;
+    tubeGeometry = new THREE.TubeGeometry(extrudePath,100,2,3,false)
 
-/**
- * Renderer
- */
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas
-})
-renderer.setSize(sizes.width, sizes.height)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    addGeometry(tubeGeometry)
+    setScale();
 
-/**
- * Animate
- */
-
-const clock = new THREE.Clock()
-
-const tick = () =>
-{
-    let offset = Date.now() * 0.0004;
-    const elapsedTime = clock.getElapsedTime()
-
-    // Update objects
-    // sphere.rotation.y = .5 * elapsedTime
-    // plane.rotation.z = elapsedTime 
-    // Update Orbital Controls
-    // controls.update()
-    window.requestAnimationFrame(tick)
-
-    // adjustVertices(offset)
-    adjustCameraPos(offset);
-
-    // Render
-    renderer.render(scene, camera)
-
-    // Call tick again on the next frame
 }
 
-function adjustCameraPos(offset) {  
-    let x = camera.position.x / xZoom;
-    let y = camera.position.y / yZoom;
-    let noise = simplex.noise2D(x, y + offset) * noiseStrength + 1; 
-    camera.position.z = noise;
-  }
 
-  // function adjustVertices(offset) {
-  //   for (let i = 0; i < plane.geometry.vertices.length; i++) {
-  //     let vertex = plane.geometry.vertices[i];
-  //     let x = vertex.x / xZoom;
-  //     let y = vertex.y / yZoom;
-  //     let noise = simplex.noise2D(x, y + offset) * noiseStrength; 
-  //     vertex.z = noise;
-  //   }
-  //   geometry.verticesNeedUpdate = true;
-  //   geometry.computeVertexNormals();
-  // }
 
-tick()
+//SCALE FUNCTION
+function setScale (){
+    mesh.scale.set(4,4,4)
+}
+
+
+//GEOMETRY FUNCTION
+function addGeometry (geometry) {
+    mesh = new THREE.Mesh(geometry,material);
+    const wireframe = new THREE.Mesh(geometry,wireframeMaterial)
+    mesh.add(wireframe)
+    parent.add(mesh)
+}
+
+
+//CAMERA ANIMATE
+function animateCamera() {
+
+    cameraHelper.visible = false;
+    cameraEye.visible = false;
+
+}
+
+
+function init () {
+    
+    container = document.getElementById( 'container' );
+    camera = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 0.01, 10000)
+    camera.position.set( 0, 50, 500 );
+    
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color( 0xf0f0f0 );
+
+    const light = new THREE.DirectionalLight( 0xffffff );
+    light.position.set( 0, 0, 1 );
+    scene.add( light );
+
+    parent = new THREE.Object3D();
+    scene.add( parent );
+
+
+    splineCamera = new THREE.PerspectiveCamera( 84, sizes.width / sizes.height, 0.01, 1000 );
+    parent.add( splineCamera );
+
+    cameraHelper = new THREE.CameraHelper( splineCamera );
+    scene.add( cameraHelper );
+
+
+    addTube()
+
+    cameraEye = new THREE.Mesh( new THREE.SphereGeometry( 5 ), new THREE.MeshBasicMaterial( { color: 0xdddddd } ) );
+    parent.add( cameraEye );
+    cameraHelper.visible = false;
+    cameraEye.visible = false;
+
+    renderer = new THREE.WebGLRenderer( { antialias: true } );
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+
+
+
+    window.addEventListener('resize', () =>
+    {
+        // Update sizes
+        sizes.width = window.innerWidth
+        sizes.height = window.innerHeight
+
+        // Update camera
+        camera.aspect = sizes.width / sizes.height
+        camera.updateProjectionMatrix()
+
+        // Update renderer
+        renderer.setSize(sizes.width, sizes.height)
+        // renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    })
+    const controls = new OrbitControls( camera, renderer.domElement );
+    controls.minDistance = 100;
+    controls.maxDistance = 2000;
+    controls.update()
+
+
+    // renderer.render( scene, camera );
+
+}
+
+
+//ANIMATE
+
+
+function animate () {
+    requestAnimationFrame( animate );
+
+    render();
+}
+
+
+
+function render () {
+    // position = new THREE.Vector3();
+    const time = Date.now();
+    const looptime = 40 * 10000;
+    const t = ( time % looptime ) / looptime;
+
+    tubeGeometry.parameters.path.getPointAt( t, position );
+    position.multiplyScalar(4)
+
+    const segments = tubeGeometry.tangents.length;
+    const pickt = t * segments;
+    const pick = Math.floor( pickt );
+    const pickNext = ( pick + 1 ) % segments;
+
+    binormal.subVectors( tubeGeometry.binormals[ pickNext ], tubeGeometry.binormals[ pick ] );
+    binormal.multiplyScalar( pickt - pick ).add( tubeGeometry.binormals[ pick ] );
+
+    tubeGeometry.parameters.path.getTangentAt( t, direction );
+    const offset = 15;
+    normal.copy( binormal ).cross( direction );
+
+    position.add( normal.clone().multiplyScalar( offset ) );
+    splineCamera.position.copy( position );
+    cameraEye.position.copy( position );
+
+    tubeGeometry.parameters.path.getPointAt( ( t + 30 / tubeGeometry.parameters.path.getLength() ) % 1, lookAt );
+    lookAt.multiplyScalar( 4 );
+
+    splineCamera.matrix.lookAt( splineCamera.position, lookAt, normal );
+    splineCamera.quaternion.setFromRotationMatrix( splineCamera.matrix );
+    cameraHelper.update()
+
+    renderer.render( scene, splineCamera );
+
+}
+
+
+init()
+animate()
