@@ -281,7 +281,7 @@ controls = new OrbitControls(camera, renderer.domElement);
       material = new THREE.MeshBasicMaterial({color:"#000000",side:THREE.DoubleSide}) //ROAD COLOR
       
       plane = new THREE.Mesh(geometry, material);
-      plane.position.set(0, -10, 200 - i * 100);
+      plane.position.set(0, -10, -200 - i * 100);
       
       scene.add(plane);
       planes.push(plane);
