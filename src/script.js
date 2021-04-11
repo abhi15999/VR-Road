@@ -218,10 +218,11 @@
 // animate()
 
 
-import * as THREE from 'three'
-import {OrbitControls} from '../helperScripts/OrbitControls'
-import {GLTFLoader} from '../helperScripts/GLTFLoader'
-import * as dat from 'dat.gui'
+// import * as THREE from 'three'
+import * as THREE from "../node_modules/three/build/three.module.js"
+import {OrbitControls} from '../helperScripts/OrbitControls.js'
+import {GLTFLoader} from '../helperScripts/GLTFLoader.js'
+import * as dat from '../node_modules/dat.gui/build/dat.gui.module.js'
 
 let scene, camera, renderer,controls, planes,planes1,geometry,material,plane,plane1,geometry1,material1
 let clock,time,delta,direction,speed,direction1,speed1
@@ -230,24 +231,43 @@ const gui = new dat.GUI()
 const container = document.getElementById( 'container' );
 
 scene = new THREE.Scene();
-camera = new THREE.PerspectiveCamera(30,window.innerWidth/window.innerHeight,1,1000)
+// scene.fog = new THREE.FogExp2( 0xf0fff0, 0.14 );
+camera = new THREE.PerspectiveCamera(30,window.innerWidth/window.innerHeight,0.1,1000)
+// camera.position.set(0,0,20)
+
+
+
 
 renderer = new THREE.WebGLRenderer({
-  antialias: true
+  antialias: true,
+  alpha:true
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor('#87CEFA'); //SURROUNDING COLOR
 renderer.setPixelRatio(window.devicePixelRatio)
+renderer.shadowMap.enabled = true;//enable shadow
 container.appendChild( renderer.domElement );
+
+
+
+window.onresize = function () {
+
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
+};
 
 
 //Texture
 
-const textureLoader = new THREE.ImageLoader()
-const modelLoader =  new GLTFLoader();
+const textureLoader = new THREE.TextureLoader()
+let modelLoader =  new GLTFLoader();
 
-modelLoader.load('../assets/low_poly_trees/scene.gltf',(gltf)=>{
-  scene.add(gltf.scene)
+modelLoader.load('./assets/3d/house/scene.gltf',(gltf)=>{
+  // scene.add(gltf.scene)
+  // console.log(gltf)
   renderer.render(scene,camera)
 })
 
@@ -262,14 +282,17 @@ controls = new OrbitControls(camera, renderer.domElement);
   //Main Road geometry
   let mainRoads = []
   for(let i = 0 ; i< 10 ; i++){
-    let mainRoadGeometry = new THREE.PlaneBufferGeometry(1000,100,1);
+    let mainRoadGeometry = new THREE.PlaneBufferGeometry(250,100,1);
     mainRoadGeometry.rotateX(Math.PI * 1.5)
-      let materialMainRoadGeometry = new THREE.MeshBasicMaterial({color:'#4E8975',side:THREE.DoubleSide})
+    textureLoader.load('./textures/grass.jpeg',(texture)=>{
+
+      let materialMainRoadGeometry = new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide})
       let planeMainRoadGeometry = new THREE.Mesh(mainRoadGeometry,materialMainRoadGeometry)
       planeMainRoadGeometry.position.set(0,-11,200-i*100)
       scene.add(planeMainRoadGeometry)
       mainRoads.push(planeMainRoadGeometry)
     
+    })
   }
 
 
@@ -277,28 +300,31 @@ controls = new OrbitControls(camera, renderer.domElement);
   for (let i = 0; i < 10; i++) {
     geometry = new THREE.PlaneBufferGeometry(40,100,1)
     geometry.rotateX(Math.PI * 1.5)
-   
-      material = new THREE.MeshBasicMaterial({color:"#000000",side:THREE.DoubleSide}) //ROAD COLOR
-      
-      plane = new THREE.Mesh(geometry, material);
-      plane.position.set(0, -10, 200 - i * 100);
-      
-      scene.add(plane);
-      planes.push(plane);
+
+      textureLoader.load('./textures/road.jpg',(texture)=>{
+        // console.log(texture)
+        material = new THREE.MeshBasicMaterial({side:THREE.DoubleSide,map:texture}) //ROAD COLOR
+        
+        plane = new THREE.Mesh(geometry, material);
+        plane.position.set(0, -10, 200 - i * 100);
+        
+        scene.add(plane);
+        planes.push(plane);
+      })
     
   }
   
   //MIDDLE BARS GEOMETRY
-  for(let i = 0; i < 3 ;i++){
+  // for(let i = 0; i < 1 ;i++){
 
-    geometry1 = new THREE.PlaneBufferGeometry(5,40,1)
-    material1 = new THREE.MeshBasicMaterial({color:'#FFFFFF'}) 
-    geometry1.rotateX(Math.PI * 1.5)
-    plane1 = new THREE.Mesh(geometry1, material1);
-    plane1.position.set(0, -8, 200 - i * 100);
-    scene.add(plane1)
-    planes1.push(plane1)
-  }
+  //   geometry1 = new THREE.PlaneBufferGeometry(5,40,1)
+  //   material1 = new THREE.MeshBasicMaterial({color:'#FFFFFF'}) 
+  //   geometry1.rotateX(Math.PI * 1.5)
+  //   plane1 = new THREE.Mesh(geometry1, material1);
+  //   plane1.position.set(0, -8, 200 - i * 100);
+  //   scene.add(plane1)
+  //   planes1.push(plane1)
+  // }
 
 
 clock = new THREE.Clock();
@@ -317,19 +343,20 @@ const render = () => {
     time += delta;
     planes.forEach(function(plane) {
         plane.position.addScaledVector(direction, speed * delta);
-        if (plane.position.z > 300) plane.position.z = -650 + ((plane.position.z - 300) % 500); // IF ROAD BREAKS CHANGE -650 to more negative value..
+        if (plane.position.z > 100) plane.position.z =  ((plane.position.z - 650) % 700); // IF ROAD BREAKS CHANGE -650 to more negative value..
     });
 
-    planes1.forEach((plane)=>{
-      plane1.position.addScaledVector(direction1, speed1 * delta);
-      if (plane1.position.z > 100) plane1.position.z = -300 + ((plane1.position.z - 100) % 200);
-    })
-
-
-    // mainRoads.forEach((mainRoad)=>{
-    //   main
+    // planes1.forEach((plane)=>{
+    //   plane1.position.addScaledVector(direction1, speed1 * delta);
+    //   if (plane1.position.z > 100) plane1.position.z = -300 + ((plane1.position.z - 100) % 200);
     // })
+
+
+    mainRoads.forEach((mainRoad)=>{
+      mainRoad.position.addScaledVector(direction,speed*delta)
+      if (mainRoad.position.z > 100) mainRoad.position.z =  ((mainRoad.position.z - 650) % 700);
+    })
     
     renderer.render(scene, camera);
-}
+  }
 render();
