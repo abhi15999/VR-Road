@@ -1,6 +1,3 @@
-# Three.js Starter
-Courtesy of Bruno Simon of https://threejs-journey.xyz/
-
 ## Setup
 Download [Node.js](https://nodejs.org/en/download/).
 Run this followed commands:
@@ -9,9 +6,6 @@ Run this followed commands:
 # Install dependencies (only the first time)
 npm install
 
-# Run the local server at localhost:8080
-npm run dev
-
-# Build for production in the dist/ directory
-npm run build
+# To Run on localhsoft:5500
+Use any Live Server tool (Ex:- In VSCode Extensions install and use `Live Server` by Ritwick Dey)
 ```
