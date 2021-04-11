@@ -281,7 +281,7 @@ controls = new OrbitControls(camera, renderer.domElement);
       material = new THREE.MeshBasicMaterial({color:"#000000",side:THREE.DoubleSide}) //ROAD COLOR
       
       plane = new THREE.Mesh(geometry, material);
-      plane.position.set(0, -10, -200 - i * 100);
+      plane.position.set(0, -10, 200 - i * 100);
       
       scene.add(plane);
       planes.push(plane);
@@ -289,7 +289,7 @@ controls = new OrbitControls(camera, renderer.domElement);
   }
   
   //MIDDLE BARS GEOMETRY
-  for(let i = 0; i < 1 ;i++){
+  for(let i = 0; i < 3 ;i++){
 
     geometry1 = new THREE.PlaneBufferGeometry(5,40,1)
     material1 = new THREE.MeshBasicMaterial({color:'#FFFFFF'}) 
@@ -317,12 +317,12 @@ const render = () => {
     time += delta;
     planes.forEach(function(plane) {
         plane.position.addScaledVector(direction, speed * delta);
-        if (plane.position.z > 250) plane.position.z = -250 + ((plane.position.z - 2000) % 500);
+        if (plane.position.z > 300) plane.position.z = -650 + ((plane.position.z - 300) % 500); // IF ROAD BREAKS CHANGE -650 to more negative value..
     });
 
     planes1.forEach((plane)=>{
       plane1.position.addScaledVector(direction1, speed1 * delta);
-      if (plane1.position.z > 100) plane1.position.z = -100 + ((plane1.position.z - 100) % 200);
+      if (plane1.position.z > 100) plane1.position.z = -300 + ((plane1.position.z - 100) % 200);
     })
 
 
