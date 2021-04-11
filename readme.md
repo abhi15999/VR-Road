@@ -7,5 +7,5 @@ Run this followed commands:
 npm install
 
 # To Run on localhsoft:5500
-Use any Live Server tool (Ex:- In VSCode Extensions install and use `Live Server` by Ritwick Dey)
+Use any Live Server tool (Ex:- In VSCode Extensions install and use **Live Server by Ritwick Dey**)
 ```
