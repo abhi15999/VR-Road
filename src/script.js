@@ -3,6 +3,8 @@ import * as THREE from "../node_modules/three/build/three.module.js"
 import {OrbitControls} from '../helperScripts/OrbitControls.js'
 import {GLTFLoader} from '../helperScripts/GLTFLoader.js'
 import {VRButton} from '../helperScripts/VRButton.js'
+import {NightMode} from '../helperScripts/NightMode.js'
+
 
 let scene, camera, renderer,controls, planes,geometry,material,plane
 let clock,time,delta,direction,speed
@@ -20,6 +22,7 @@ camera = new THREE.PerspectiveCamera(30,window.innerWidth/window.innerHeight,0.1
 
 
 
+
 renderer = new THREE.WebGLRenderer({
   antialias: true,
   alpha:true
@@ -30,6 +33,12 @@ renderer.setPixelRatio(window.devicePixelRatio)
 renderer.shadowMap.enabled = true;//enable shadow
 container.appendChild( renderer.domElement );
 document.body.appendChild( VRButton.createButton( renderer ) );
+document.body.appendChild( NightMode.createButton( renderer) );
+document.body.appendChild( NightMode.createNaturemuteButton() );
+
+
+
+
 
 const light = new THREE.AmbientLight( 0x404040, 3 ); // soft white light
 scene.add( light );
